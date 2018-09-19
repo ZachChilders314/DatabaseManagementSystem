@@ -11,6 +11,11 @@ public class Column {
 	private String name;
 	private int size;
 	
+	public Column(String name, int size) {
+		this.name = name;
+		this.size = size;
+	}
+	
 	public Column(String input) {
 		
 		//Split the String by spaces
