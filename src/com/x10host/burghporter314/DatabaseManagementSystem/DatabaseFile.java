@@ -53,7 +53,6 @@ public class DatabaseFile {
 		this.fileParser = new RandomAccessFile(this.name + EXTENSION, "rw");
 		
 		this.fileParser.writeInt(this.columns.size());
-		
 		this.fileParser.writeInt(this.recordSize);
 		
 		for(Column column : this.columns) {
@@ -61,7 +60,10 @@ public class DatabaseFile {
 			this.fileParser.writeInt(column.getSize());
 		}
 
-		this.fileParser.close();
+		this.fileParser.seek(0);
+		this.columns = getColumns();
+		this.firstRecordPosition = this.fileParser.getFilePointer();
+		//this.fileParser.close();
 		
 	}
 	
@@ -111,7 +113,28 @@ public class DatabaseFile {
 
 	}
 	
-	public void purge() {
+	public void purge() throws IOException {
+		
+		String originalName = this.getName();
+		this.setName(this.getName() + "temp");
+		
+		createTable();
+		
+		RandomAccessFile tempReader = new RandomAccessFile(originalName + EXTENSION, "rw");
+		tempReader.seek(this.firstRecordPosition);
+
+		while(tempReader.getFilePointer() < tempReader.length()) {
+			char s = tempReader.readChar();
+			if(s == '#') {
+				tempReader.skipBytes((this.recordSize * 2) - 2);
+				continue;
+			} 
+
+			this.fileParser.writeChar(s);
+		}
+		
+		(new File(originalName + EXTENSION)).delete();
+		(new File(this.getName() + EXTENSION)).renameTo(new File(originalName + EXTENSION));
 		
 	}
 	
