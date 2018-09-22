@@ -34,6 +34,8 @@ public class Main {
 			userInput = input.nextInt(); input.nextLine();
 			
 			DatabaseFile file;
+			Column[] columns;
+			Record record;
 			
 			switch(userInput) {
 				case 1:
@@ -62,8 +64,8 @@ public class Main {
 					System.out.print("Enter File Name: ");
 					file = new DatabaseFile(input.nextLine());
 					
-					Column[] columns = file.getColumnArray();
-					Record record = new Record(columns);
+					columns = file.getColumnArray();
+					record = new Record(columns);
 					
 					for(Column column: columns) {
 						System.out.print(column.getName() + ": ");
@@ -73,10 +75,26 @@ public class Main {
 					file.insert(record);
 					break;
 				case 3:
-					//Statements
+					
+					System.out.print("Enter File Name: ");
+					file = new DatabaseFile(input.nextLine());
+					
+					columns = file.getColumnArray();
+					record = new Record(columns);
+					
+					for(Column column: columns) {
+						System.out.print(column.getName() + ": ");
+						record.addValue(input.nextLine());
+					}
+					
+					file.remove(record);
 					break;
 				case 4:
-					//Statements
+					
+					System.out.print("Enter File Name: ");
+					file = new DatabaseFile(input.nextLine());
+					
+					file.listFile();
 					break;
 				case 5:
 					//Statements

@@ -21,6 +21,7 @@ public class DatabaseFile {
 	private ArrayList<Column> columns;
 	
 	private int recordSize;
+	private long firstRecordPosition;
 	private final String EXTENSION = ".dbf";
 	
 	private RandomAccessFile fileParser;
@@ -36,13 +37,8 @@ public class DatabaseFile {
 		
 		this.fileParser = new RandomAccessFile(fileName + EXTENSION, "rw");
 		
-		int numColumns = this.fileParser.readInt();
-		this.recordSize = this.fileParser.readInt();
-
-		for(int i = 0; i < numColumns; i++) {
-			this.columns.add(new Column(this.fileParser.readUTF(), 
-					this.fileParser.readInt()));
-		}
+		this.columns = getColumns();
+		this.firstRecordPosition = this.fileParser.getFilePointer();
 	}
 	
 	public DatabaseFile() {
@@ -82,19 +78,44 @@ public class DatabaseFile {
 		
 	}
 	
-	public void remove() {
-		
+	public void remove(Record record) throws IOException {
+		for(long i = this.firstRecordPosition; i < this.fileParser.length(); i += this.recordSize * 2) {
+			removeIfEquals(i, record);
+		}
 	}
 	
-	public void listFile() {
+	public void listFile() throws IOException {
 		
+		this.fileParser.seek(0);
+		int numColumns = this.fileParser.readInt();
+		
+		for(Column column: this.columns) {
+			System.out.print(String.format("%1$-" + (column.getSize() + 2) + "s", "Column: " + column.getName()));;
+		}
+		System.out.println("");
+		
+		for(long i = this.firstRecordPosition; i < this.fileParser.length(); i += this.recordSize * 2) {
+			
+			this.fileParser.seek(i);
+			if(this.fileParser.readChar() == '#') { continue; }
+			
+			Record record = getRecord(i);
+			int counter = 0;
+			
+			for(String s : record.getValues()) {
+				System.out.print(String.format("%1$-" + (this.columns.get(counter++).getSize() + 2) + "s", s));
+			}
+			
+			System.out.println("");
+		}
+
 	}
 	
 	public void purge() {
 		
 	}
 	
-	public void addEntry(int columnSize, String value) throws IOException {
+	private void addEntry(int columnSize, String value) throws IOException {
 		
 		int paddedZeros = columnSize - value.length();
 		int itemsRemaining = columnSize;
@@ -115,6 +136,49 @@ public class DatabaseFile {
 	public void addColumn(Column column) {
 		this.columns.add(column);
 		recordSize += column.getSize();
+	}
+	
+	private ArrayList<Column> getColumns() throws IOException {
+		
+		ArrayList<Column> columns = new ArrayList<Column>();
+		
+		int numColumns = this.fileParser.readInt();
+		this.recordSize = this.fileParser.readInt();
+
+		for(int i = 0; i < numColumns; i++) {
+			columns.add(new Column(this.fileParser.readUTF(), 
+					this.fileParser.readInt()));
+		}
+		
+		return columns;
+		
+	}
+	
+	private Record getRecord(long pos) throws IOException {
+		
+		this.fileParser.seek(pos);
+		Record record = new Record(this.getColumnArray());
+		
+		for(Column column: this.columns) {
+			
+			StringBuilder s = new StringBuilder("");
+			for(int i = 0; i < column.getSize(); i++) {
+				s.append(this.fileParser.readChar());
+			}
+			
+			record.addValue(s.toString().trim());
+		}
+		
+		return record;
+		
+	}
+	
+	private void removeIfEquals(long index, Record record) throws IOException {
+		Record currentRecord = getRecord(index);
+		if(currentRecord.equals(record)) {
+			this.fileParser.seek(index);
+			this.fileParser.writeChar('#'); //Tombstone
+		}
 	}
 	
 	public String getName() {

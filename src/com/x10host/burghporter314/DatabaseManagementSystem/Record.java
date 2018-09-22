@@ -48,4 +48,33 @@ public class Record {
 	public boolean isFull() {
 		return ((position + 1) == this.values.length);
 	}
+	
+	@Override
+	public boolean equals(Object o) {
+		
+		if(o == this) {
+			return true;
+		}
+		
+		if(!(o instanceof Record)) {
+			return false;
+		}
+		
+		Record record = (Record)(o);
+		HashMap<String, String> map = record.getValueMapper();
+		
+		for(String key : map.keySet()) {
+			
+			if(map.get(key).isEmpty()) { continue; }
+			
+			if(!this.valueMapper.get(key).equals(map.get(key))) {
+				return false;
+			}
+		}
+		
+		return true;
+		
+	}
+	
+	
 }
