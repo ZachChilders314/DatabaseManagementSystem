@@ -74,15 +74,17 @@ public class Main {
 		while(true) {
 			
 			columns = file.getColumnArray();
-			record = new Record(columns);
+			record = new Record(columns); /*We need to add columns to the object for mapping in the hashtable in Record Class*/
 			
 			System.out.println("1 - Add Entry | 2 - Remove Entry | 3 - List Database | 4 - Exit");
-			userInput = input.nextInt(); input.nextLine();
+			userInput = input.nextInt(); input.nextLine(); /* nextInt() does not clear the new line */
 			
 			switch(userInput) {
-					
+				
+				/*Adding an Entry to the Database*/
 				case 1:
 					
+					/*Retrieve the values for all columns from user*/
 					for(Column column: columns) {
 						System.out.print(column.getName() + ": ");
 						record.addValue(input.nextLine());
@@ -90,9 +92,11 @@ public class Main {
 					
 					file.insert(record);
 					break;
-					
+				
+				/* Delete an Entry from the Database */
 				case 2:
 					
+					/*Removes all records that match all fields that user enters a value into*/
 					for(Column column: columns) {
 						System.out.print(column.getName() + ": ");
 						record.addValue(input.nextLine());
@@ -100,12 +104,14 @@ public class Main {
 					
 					file.remove(record);
 					break;
-					
+				
+				/*List the Database File Columns and its Contents*/
 				case 3:
 					
 					file.listFile();
 					break;
-					
+				
+				/*Update the Database File by deleting all records with Tombstones and EXIT*/
 				case 4:
 					
 					file.purge();

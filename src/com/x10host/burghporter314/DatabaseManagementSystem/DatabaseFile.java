@@ -27,6 +27,10 @@ public class DatabaseFile {
 	private RandomAccessFile fileParser;
 	private Scanner input;
 	
+	/**
+	 * This Constructor assumes that the database file already exists
+	 */
+	
 	public DatabaseFile(String fileName) throws IOException {
 		
 		this();
@@ -41,11 +45,20 @@ public class DatabaseFile {
 		this.firstRecordPosition = this.fileParser.getFilePointer();
 	}
 	
+	/**
+	 * Assumes the File Does not Exist
+	 */
+	
 	public DatabaseFile() {
 		recordSize = 0;
 		columns = new ArrayList<Column>();
 		this.input = new Scanner(System.in);
 	}
+	
+	/**
+	 * Creates a new table by writing to a .dbf file the new columns specified by user.
+	 * @throws IOException
+	 */
 	
 	public void createTable() throws IOException {
 		
@@ -67,6 +80,12 @@ public class DatabaseFile {
 		
 	}
 	
+	/**
+	 * Inserts a new Record into the database file (writes to the file in binary format where char = 2 bytes)
+	 * @param record is used to map column to value
+	 * @throws IOException
+	 */
+	
 	public void insert(Record record) throws IOException {
 		
 		HashMap<String, String> map = record.getValueMapper();
@@ -80,11 +99,23 @@ public class DatabaseFile {
 		
 	}
 	
+	/**
+	 * Removes a record from the file by tombstoning it (inserts a # at the first position of the record)
+	 * For an entry to be removed, all values specified by the user should be matched (excluding blanks)
+	 * @param record 
+	 * @throws IOException
+	 */
+	
 	public void remove(Record record) throws IOException {
 		for(long i = this.firstRecordPosition; i < this.fileParser.length(); i += this.recordSize * 2) {
 			removeIfEquals(i, record);
 		}
 	}
+	
+	/**
+	 * Lists the contents of the file by first printing the columns and then the corresponding data.
+	 * @throws IOException
+	 */
 	
 	public void listFile() throws IOException {
 		
@@ -113,6 +144,11 @@ public class DatabaseFile {
 
 	}
 	
+	/**
+	 * Writes all non-deleted records to a new 'temp' file and then renames the file back to original file name.
+	 * @throws IOException
+	 */
+	
 	public void purge() throws IOException {
 		
 		String originalName = this.getName();
@@ -138,6 +174,13 @@ public class DatabaseFile {
 		
 	}
 	
+	/**
+	 * Appends a new entry to the database file. 
+	 * @param columnSize Used to determine how many blanks to prepend on each element in the entry.
+	 * @param value is the value associated with the column value in the row.
+	 * @throws IOException
+	 */
+	
 	private void addEntry(int columnSize, String value) throws IOException {
 		
 		int paddedZeros = columnSize - value.length();
@@ -156,10 +199,20 @@ public class DatabaseFile {
 		
 	}
 	
+	/**
+	 * Adds a knew column to this object's column arraylist. 
+	 * @param column
+	 */
 	public void addColumn(Column column) {
 		this.columns.add(column);
 		recordSize += column.getSize();
 	}
+	
+	/**
+	 * Reads the database file and extracts the columns from the metadata information
+	 * @return ArrayList<Column> representing this file's columns.
+	 * @throws IOException
+	 */
 	
 	private ArrayList<Column> getColumns() throws IOException {
 		
@@ -176,6 +229,13 @@ public class DatabaseFile {
 		return columns;
 		
 	}
+	
+	/**
+	 * Gets the record starting at position pos from the file. 
+	 * @param pos starting index of file
+	 * @return new record representing data read from file.
+	 * @throws IOException
+	 */
 	
 	private Record getRecord(long pos) throws IOException {
 		
@@ -196,6 +256,13 @@ public class DatabaseFile {
 		
 	}
 	
+	/**
+	 * Tombstone the record by inserting a # at the beginning of the record.
+	 * @param index starting index of the record
+	 * @param record object to compare with current record.
+	 * @throws IOException
+	 */
+	
 	private void removeIfEquals(long index, Record record) throws IOException {
 		Record currentRecord = getRecord(index);
 		if(currentRecord.equals(record)) {
@@ -204,13 +271,28 @@ public class DatabaseFile {
 		}
 	}
 	
+	/**
+	 * Returns the name of the file
+	 * @return
+	 */
+	
 	public String getName() {
 		return this.name;
 	}
 	
+	/**
+	 * Set the name of the file
+	 * @param name
+	 */
+	
 	public void setName(String name) {
 		this.name = name;
 	}
+	
+	/**
+	 * Get the columns associated with this object in an array format.
+	 * @return
+	 */
 	
 	public Column[] getColumnArray() {
 		
