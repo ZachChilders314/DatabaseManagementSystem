@@ -23,7 +23,7 @@ public class DatabaseFile {
 	private int recordSize;
 	private long firstRecordPosition;
 	private final String EXTENSION = ".dbf";
-	
+	private final int MIN_SPACES = 30;
 	private RandomAccessFile fileParser;
 	private Scanner input;
 	
@@ -121,9 +121,10 @@ public class DatabaseFile {
 		
 		this.fileParser.seek(0);
 		int numColumns = this.fileParser.readInt();
+		int max = findMaxColumn(MIN_SPACES, this.columns);
 		
 		for(Column column: this.columns) {
-			System.out.print(String.format("%1$-" + (column.getSize() + 2) + "s", "Column: " + column.getName()));;
+			System.out.print(String.format("%1$-" + (max) + "s", column.getName()));;
 		}
 		System.out.println("");
 		
@@ -136,7 +137,7 @@ public class DatabaseFile {
 			int counter = 0;
 			
 			for(String s : record.getValues()) {
-				System.out.print(String.format("%1$-" + (this.columns.get(counter++).getSize() + 2) + "s", s));
+				System.out.print(String.format("%1$-" + (max) + "s", s));
 			}
 			
 			System.out.println("");
@@ -154,6 +155,7 @@ public class DatabaseFile {
 		String originalName = this.getName();
 		this.setName(this.getName() + "temp");
 		
+		this.fileParser.close();
 		createTable();
 		
 		RandomAccessFile tempReader = new RandomAccessFile(originalName + EXTENSION, "rw");
@@ -168,6 +170,9 @@ public class DatabaseFile {
 
 			this.fileParser.writeChar(s);
 		}
+		
+		tempReader.close();
+		this.fileParser.close();
 		
 		(new File(originalName + EXTENSION)).delete();
 		(new File(this.getName() + EXTENSION)).renameTo(new File(originalName + EXTENSION));
@@ -197,6 +202,24 @@ public class DatabaseFile {
 			itemsRemaining--;
 		}
 		
+	}
+	
+	/**
+	 * If there exists a column with size > 30, return the max column size.
+	 * @param value lowest value allowed by user for spacing
+	 * @param columns specifies the set of columns to find max size for
+	 * @return maximum value of the column size if > 30
+	 */
+	
+	private int findMaxColumn(int value, ArrayList<Column> columns) {
+		
+		for(Column column: columns) {
+			if(column.getSize() > value) {
+				value = column.getSize();
+			}
+		}
+		
+		return value;
 	}
 	
 	/**
